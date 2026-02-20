@@ -61,7 +61,7 @@
       <button id="send">发送</button>
     </div>
 
-    <div class="row">
+    <div class="row" id="bodyRow">
       <textarea
         id="body"
         placeholder='POST Body（JSON），例如：{"name":"alice"}'
@@ -73,12 +73,16 @@
 
     <script>
       const $ = (id) => document.getElementById(id);
-
+      // ===== 页面加载时读取历史 =====
+      const saved = JSON.parse(localStorage.getItem("history") || "[]");
+      console.log("历史记录：", saved);
       // 监听 method 下拉变化
       $("method").addEventListener("change", () => {
         const isPost = $("method").value === "POST";
-        $("body").style.display = isPost ? "block" : "none";
+        $("bodyRow").style.display = isPost ? "flex" : "none";
       });
+      $("method").dispatchEvent(new Event("change"));
+
       $("send").addEventListener("click", async () => {
         const method = $("method").value;
         const url = $("url").value.trim();
@@ -120,6 +124,20 @@
 
           $("meta").textContent = `状态: ${res.status}  | 耗时: ${ms}ms`;
           $("out").textContent = pretty || "(空响应)";
+          // ===== 保存历史 =====
+          const history = JSON.parse(localStorage.getItem("history") || "[]");
+
+          history.unshift({
+            method,
+            url,
+            body: bodyText,
+            time: Date.now(),
+          });
+
+          // 只保留 5 条
+          const latest = history.slice(0, 5);
+
+          localStorage.setItem("history", JSON.stringify(latest));
         } catch (err) {
           $("meta").textContent = "失败";
           $("out").textContent = String(err);
