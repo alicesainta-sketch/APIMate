@@ -48,6 +48,10 @@
         color: #666;
         font-size: 12px;
       }
+      #history button {
+        margin: 4px 6px 4px 0;
+        padding: 6px 10px;
+      }
     </style>
   </head>
   <body>
@@ -69,13 +73,37 @@
     </div>
 
     <div class="muted" id="meta">未发送</div>
+
+    <div class="muted">历史（点击回填）</div>
+    <div id="history"></div>
+
     <pre id="out">(结果会显示在这里)</pre>
 
     <script>
       const $ = (id) => document.getElementById(id);
-      // ===== 页面加载时读取历史 =====
-      const saved = JSON.parse(localStorage.getItem("history") || "[]");
-      console.log("历史记录：", saved);
+      function renderHistory() {
+        const history = JSON.parse(localStorage.getItem("history") || "[]");
+        const box = $("history");
+        box.innerHTML = "";
+
+        history.forEach((item, idx) => {
+          const btn = document.createElement("button");
+          btn.textContent = `${idx + 1}. ${item.method} ${item.url}`;
+          btn.addEventListener("click", () => {
+            $("method").value = item.method;
+            $("url").value = item.url;
+            $("body").value = item.body || "";
+            $("method").dispatchEvent(new Event("change")); // 同步隐藏/显示 body
+          });
+          box.appendChild(btn);
+        });
+
+        if (history.length === 0) {
+          box.textContent = "(暂无)";
+        }
+      }
+
+      renderHistory();
       // 监听 method 下拉变化
       $("method").addEventListener("change", () => {
         const isPost = $("method").value === "POST";
@@ -138,6 +166,7 @@
           const latest = history.slice(0, 5);
 
           localStorage.setItem("history", JSON.stringify(latest));
+          renderHistory();
         } catch (err) {
           $("meta").textContent = "失败";
           $("out").textContent = String(err);
