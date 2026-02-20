@@ -105,8 +105,16 @@
           const ms = Math.round(performance.now() - t0);
 
           const text = await res.text();
+          let pretty = text;
+          try {
+            const obj = JSON.parse(text);
+            pretty = JSON.stringify(obj, null, 2);
+          } catch (e) {
+            // 不是 JSON 就保持原样
+          }
+
           $("meta").textContent = `状态: ${res.status}  | 耗时: ${ms}ms`;
-          $("out").textContent = text || "(空响应)";
+          $("out").textContent = pretty || "(空响应)";
         } catch (err) {
           $("meta").textContent = "失败";
           $("out").textContent = String(err);
