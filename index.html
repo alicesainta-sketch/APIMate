@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>接口小助手</title>
+    <style>
+      body {
+        font-family:
+          system-ui,
+          -apple-system,
+          Segoe UI,
+          Roboto,
+          Helvetica,
+          Arial;
+        padding: 16px;
+        max-width: 900px;
+        margin: 0 auto;
+      }
+      .row {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 12px;
+      }
+      input,
+      select,
+      textarea,
+      button {
+        font: inherit;
+        padding: 10px;
+      }
+      input,
+      textarea {
+        width: 100%;
+      }
+      textarea {
+        min-height: 140px;
+      }
+      button {
+        cursor: pointer;
+      }
+      pre {
+        background: #f6f8fa;
+        padding: 12px;
+        overflow: auto;
+      }
+      .muted {
+        color: #666;
+        font-size: 12px;
+      }
+    </style>
+  </head>
+  <body>
+    <h2>接口小助手</h2>
+    <div class="row">
+      <select id="method">
+        <option>GET</option>
+        <option>POST</option>
+      </select>
+      <input id="url" placeholder="https://api.example.com/..." />
+      <button id="send">发送</button>
+    </div>
+
+    <div class="row">
+      <textarea
+        id="body"
+        placeholder='POST Body（JSON），例如：{"name":"alice"}'
+      ></textarea>
+    </div>
+
+    <div class="muted" id="meta">未发送</div>
+    <pre id="out">(结果会显示在这里)</pre>
+
+    <script>
+      const $ = (id) => document.getElementById(id);
+
+      $("send").addEventListener("click", async () => {
+        const method = $("method").value;
+        const url = $("url").value.trim();
+        const bodyText = $("body").value.trim();
+
+        if (!url) {
+          alert("先填 URL");
+          return;
+        }
+
+        const t0 = performance.now();
+        $("meta").textContent = "请求中...";
+        $("out").textContent = "";
+
+        try {
+          const options = { method, headers: {} };
+
+          if (method === "POST") {
+            options.headers["Content-Type"] = "application/json";
+            if (bodyText) {
+              // 这里故意强制 parse：让你立刻暴露 JSON 格式问题
+              options.body = JSON.stringify(JSON.parse(bodyText));
+            } else {
+              options.body = "{}";
+            }
+          }
+
+          const res = await fetch(url, options);
+          const ms = Math.round(performance.now() - t0);
+
+          const text = await res.text();
+          $("meta").textContent = `状态: ${res.status}  | 耗时: ${ms}ms`;
+          $("out").textContent = text || "(空响应)";
+        } catch (err) {
+          $("meta").textContent = "失败";
+          $("out").textContent = String(err);
+        }
+      });
+    </script>
+  </body>
+</html>
