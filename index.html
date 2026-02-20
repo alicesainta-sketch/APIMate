@@ -54,6 +54,7 @@
       }
     </style>
   </head>
+
   <body>
     <h2>接口小助手</h2>
 
@@ -70,6 +71,13 @@
       <textarea
         id="body"
         placeholder='POST Body（JSON），例如：{"name":"alice"}'
+      ></textarea>
+    </div>
+
+    <div class="row">
+      <textarea
+        id="headers"
+        placeholder='Headers（JSON），例如：{"Authorization":"Bearer xxx"}'
       ></textarea>
     </div>
 
@@ -102,6 +110,7 @@
             $("method").value = item.method;
             $("url").value = item.url;
             $("body").value = item.body || "";
+            $("headers").value = item.headers || "";
             $("method").dispatchEvent(new Event("change"));
           });
           box.appendChild(btn);
@@ -162,11 +171,22 @@
       }
 
       // ========= 业务层：把表单输入 -> 请求 + 把响应 -> pretty =========
-      async function sendRequest(method, url, bodyText) {
+      async function sendRequest(method, url, bodyText, headersText) {
         const options = { method, headers: {} };
 
+        // 解析自定义 headers
+        if (headersText) {
+          try {
+            const customHeaders = JSON.parse(headersText);
+            Object.assign(options.headers, customHeaders);
+          } catch (e) {
+            throw new Error("Headers JSON 格式错误");
+          }
+        }
+
         if (method === "POST") {
-          options.headers["Content-Type"] = "application/json";
+          options.headers["Content-Type"] =
+            options.headers["Content-Type"] || "application/json";
           options.body = bodyText ? JSON.stringify(JSON.parse(bodyText)) : "{}";
         }
 
@@ -195,6 +215,7 @@
 
       // ========= UI：发送按钮 =========
       $("send").addEventListener("click", async () => {
+        const headersText = $("headers").value.trim();
         const method = $("method").value;
         const url = $("url").value.trim();
         const bodyText = $("body").value.trim();
@@ -209,7 +230,7 @@
         $("out").textContent = "";
 
         try {
-          const result = await sendRequest(method, url, bodyText);
+          const result = await sendRequest(method, url, bodyText, headersText);
           const ms = Math.round(performance.now() - t0);
 
           if (!result.ok) {
@@ -221,14 +242,21 @@
           $("meta").textContent = `状态: ${result.status} | 耗时: ${ms}ms`;
           $("out").textContent = result.pretty || "(空响应)";
 
-          // 保存历史
+          // 保存历史（包含 headers）
           const history = JSON.parse(localStorage.getItem("history") || "[]");
-          history.unshift({ method, url, body: bodyText, time: Date.now() });
+          history.unshift({
+            method,
+            url,
+            body: bodyText,
+            headers: headersText,
+            time: Date.now(),
+          });
           localStorage.setItem("history", JSON.stringify(history.slice(0, 5)));
+
           renderHistory();
         } catch (err) {
           $("meta").textContent = "失败";
-          $("out").textContent = String(err);
+          $("out").textContent = err?.message ? err.message : String(err);
         }
       });
 
@@ -238,3 +266,4 @@
     </script>
   </body>
 </html>
+```
