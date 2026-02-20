@@ -74,6 +74,11 @@
     <script>
       const $ = (id) => document.getElementById(id);
 
+      // 监听 method 下拉变化
+      $("method").addEventListener("change", () => {
+        const isPost = $("method").value === "POST";
+        $("body").style.display = isPost ? "block" : "none";
+      });
       $("send").addEventListener("click", async () => {
         const method = $("method").value;
         const url = $("url").value.trim();
