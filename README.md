@@ -17,7 +17,7 @@
 - 打开 `index.html`（直接用浏览器或开启本地静态服务器）。
 - 选择方法（GET/POST），填写完整 URL（如 `https://httpbin.org/get`）。
 - 若为 POST，在“POST Body（JSON）”文本框中填写合法 JSON（如 `{"name":"alice"}`）。
-- 点击“发送”，上方显示“状态: <code> | 耗时: <ms>”，下方显示响应文本。
+- 点击“发送”，上方显示“状态: `<code>` | 耗时: `<ms>`”，下方显示响应文本。
 - 历史记录位于“历史（点击回填）”区域，点任一按钮可恢复对应请求；恢复后会同步隐藏/显示 Body（随方法变化）。
 - 清空历史：在浏览器控制台执行 `localStorage.removeItem("history")`。
 
